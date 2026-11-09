@@ -572,10 +572,11 @@
   }
 }
 
+// Text links take the control color: --primary-color is too dark to read on dark backgrounds.
 .App a.DossierMore {
   font-size: 13px;
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--control-color);
 }
 
 // ── Certificates ────────────────────────────────────────────────────────
@@ -640,7 +641,7 @@
   a.DossierCertificate-verify {
     font-size: 13px;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--control-color);
   }
 
   .DossierEntry-controls {

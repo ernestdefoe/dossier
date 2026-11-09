@@ -8,9 +8,19 @@ import { t } from '../util';
  * Firefox on the desktop.
  */
 export default class MonthField extends Component {
+  oninit(vnode) {
+    super.oninit(vnode);
+    // Its own copy of both halves: each change reports the pair, whatever was redrawn in between.
+    [this.year, this.month] = (this.attrs.value || '').split('-');
+  }
+
   view() {
-    const [year, month] = (this.attrs.value || '').split('-');
-    const set = (y, mo) => this.attrs.onchange(y && mo ? `${y}-${mo}` : y || mo ? `${y || ''}-${mo || ''}` : '');
+    const { year, month } = this;
+    const set = (y, mo) => {
+      this.year = y;
+      this.month = mo;
+      this.attrs.onchange(y && mo ? `${y}-${mo}` : y || mo ? `${y || ''}-${mo || ''}` : '');
+    };
 
     return (
       <div className="DossierMonth">
@@ -21,7 +31,7 @@ export default class MonthField extends Component {
             name={this.attrs.name}
             aria-label={t('modals.month')}
             value={month || ''}
-            onchange={(e) => set(year, e.target.value)}
+            onchange={(e) => set(this.year, e.target.value)}
             disabled={this.attrs.disabled}
           >
             <option value="">{t('modals.month')}</option>
@@ -40,7 +50,7 @@ export default class MonthField extends Component {
           placeholder={t('modals.year')}
           aria-label={t('modals.year')}
           value={year || ''}
-          oninput={(e) => set(e.target.value, month)}
+          oninput={(e) => set(e.target.value, this.month)}
           disabled={this.attrs.disabled}
         />
       </div>
