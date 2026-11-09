@@ -1,0 +1,20 @@
+ernestdefoe-dossier:
+  api:
+    required: Fill this in.
+    invalid: This is not valid.
+    too_long: "Keep this under {max} characters."
+    too_many: "Pick at most {max}."
+    invalid_month: Pick a month and a year.
+    end_before_start: The end comes before the start.
+    invalid_kind: Pick a type.
+    invalid_level: Pick a level.
+    invalid_percent: Enter a number from 0 to 100.
+    invalid_url: "Enter a web address that starts with https:// or http://."
+    invalid_visibility: Pick who can see this.
+    invalid_section: This section does not exist.
+    too_many_entries: "A section holds at most {max} entries."
+    invalid_skill: Pick a skill from the list.
+    invalid_category: Pick a category from the list.
+    duplicate_skill: This skill is already on the dossier.
+    custom_skills_off: Pick a skill from the list.
+    skill_exists: A skill with this name is already in the catalogue.
