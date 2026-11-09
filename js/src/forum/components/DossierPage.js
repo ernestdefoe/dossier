@@ -1,3 +1,4 @@
+import selectBox from '../../common/selectBox';
 import app from 'flarum/forum/app';
 import UserPage from 'flarum/forum/components/UserPage';
 import UserCard from 'flarum/forum/components/UserCard';
@@ -119,7 +120,7 @@ export default class DossierPage extends UserPage {
             <p className="DossierPage-message">{t('page.empty')}</p>
           )
         ) : (
-          SECTIONS.map((section) => this.section(section))
+          SECTIONS.map((section) => this.section(section)).filter(Boolean)
         )}
       </div>
     );
@@ -168,16 +169,19 @@ export default class DossierPage extends UserPage {
         <label className="DossierVisibility">
           <Icon name={VISIBILITY_ICONS[level]} />
           <span className="visually-hidden">{t('visibility.label')}</span>
-          <select
-            className="FormControl DossierVisibility-select"
-            value={level}
-            aria-label={t('visibility.label_for', { section: t(`sections.${key}`) })}
-            onchange={(e) => this.save('PATCH', '', { visibility: { [key]: e.target.value } })}
-          >
-            {['everyone', 'members', 'private'].map((value) => (
-              <option value={value}>{t(`visibility.${value}`)}</option>
-            ))}
-          </select>
+          {selectBox(
+            <select
+              className="Select-input FormControl"
+              value={level}
+              aria-label={t('visibility.label_for', { section: t(`sections.${key}`) })}
+              onchange={(e) => this.save('PATCH', '', { visibility: { [key]: e.target.value } })}
+            >
+              {['everyone', 'members', 'private'].map((value) => (
+                <option value={value}>{t(`visibility.${value}`)}</option>
+              ))}
+            </select>,
+            'DossierVisibility-select'
+          )}
         </label>
         {action ? (
           <Button

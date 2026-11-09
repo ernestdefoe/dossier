@@ -141,11 +141,12 @@
   color: var(--muted-color);
   font-weight: normal;
 
-  select.DossierVisibility-select {
+  .DossierVisibility-select .Select-input {
     width: auto;
     max-width: 100%;
     height: 32px;
-    padding: 4px 28px 4px 10px;
+    padding-top: 0;
+    padding-bottom: 0;
     font-size: 13px;
   }
 }
@@ -720,6 +721,11 @@
     gap: 0 14px;
   }
 
+  .Select,
+  .Select-input {
+    width: 100%;
+  }
+
   &-number {
     width: 90px;
   }
@@ -790,10 +796,25 @@
   &-month {
     flex: 1 1 auto;
     min-width: 0;
+
+    .Select-input {
+      width: 100%;
+    }
   }
 
   &-year {
     flex: 0 0 96px;
     width: 96px;
   }
+}
+
+// Edit mode: links one per row, so each keeps its buttons beside it.
+.App .DossierPage--editing .DossierLinks {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.App .DossierEntry-controls .Button[disabled] {
+  background: none;
+  opacity: 0.35;
 }

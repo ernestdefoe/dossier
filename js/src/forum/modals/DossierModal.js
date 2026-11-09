@@ -1,3 +1,4 @@
+import selectBox from '../../common/selectBox';
 import FormModal from 'flarum/common/components/FormModal';
 import Button from 'flarum/common/components/Button';
 import { t } from '../util';
@@ -30,7 +31,9 @@ export default class DossierModal extends FormModal {
   /** A labelled field; `input` is given the id the label points at. */
   field(name, label, input, help) {
     const id = `dossier-${name}`;
-    input.attrs = { id, name, ...input.attrs };
+    // A wrapped <select> gets the id itself, so the label points at the control.
+    const control = input.tag === 'span' && Array.isArray(input.children) ? input.children[0] : input;
+    control.attrs = { id, name, ...control.attrs };
 
     return (
       <div className={`Form-group DossierModal-field DossierModal-field--${name}`}>
@@ -56,8 +59,8 @@ export default class DossierModal extends FormModal {
 
   /** A native select (works with every screen reader and phone picker). */
   select(name, options, attrs = {}) {
-    return (
-      <select className="FormControl" value={this.values[name] ?? ''} onchange={(e) => (this.values[name] = e.target.value)} {...attrs}>
+    return selectBox(
+      <select className="Select-input FormControl" value={this.values[name] ?? ''} onchange={(e) => (this.values[name] = e.target.value)} {...attrs}>
         {Object.entries(options).map(([value, label]) => (
           <option value={value}>{label}</option>
         ))}

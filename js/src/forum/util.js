@@ -1,7 +1,9 @@
 import app from 'flarum/forum/app';
+import extractText from 'flarum/common/utils/extractText';
 
 /** A forum string of Dossier's. */
-export const t = (key, params) => app.translator.trans(`ernestdefoe-dossier.forum.${key}`, params);
+/** Plain strings (none of these carry markup), so they work in attributes and joins too. */
+export const t = (key, params) => extractText(app.translator.trans(`ernestdefoe-dossier.forum.${key}`, params));
 
 export const apiUrl = (path) => `${app.forum.attribute('apiUrl')}${path}`;
 

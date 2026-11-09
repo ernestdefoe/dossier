@@ -2,6 +2,7 @@ import app from 'flarum/admin/app';
 import Component from 'flarum/common/Component';
 import Button from 'flarum/common/components/Button';
 import saveSettings from 'flarum/admin/utils/saveSettings';
+import extractText from 'flarum/common/utils/extractText';
 import { t } from './util';
 
 const KEY = 'ernestdefoe-dossier.open_to';
@@ -40,7 +41,9 @@ export default class OpenToEditor extends Component {
                 type="text"
                 maxlength="60"
                 aria-label={t('open_to.label')}
-                placeholder={BUILT_IN.includes(row.id) ? app.translator.trans(`ernestdefoe-dossier.lib.open_to.${row.id}`) : t('open_to.label')}
+                placeholder={
+                  BUILT_IN.includes(row.id) ? extractText(app.translator.trans(`ernestdefoe-dossier.lib.open_to.${row.id}`)) : t('open_to.label')
+                }
                 value={row.label}
                 oninput={(e) => {
                   row.label = e.target.value;

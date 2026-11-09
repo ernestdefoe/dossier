@@ -141,13 +141,19 @@
 
     tr {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: minmax(0, 1fr);
       padding: 6px 0;
       border-bottom: 1px solid var(--control-bg);
     }
 
     td {
       border: 0;
+      min-width: 0;
     }
   }
+}
+
+// Inputs on the grey category card need the page's own background to show as fields.
+.DossierAdmin-category .FormControl {
+  background: var(--body-bg);
 }

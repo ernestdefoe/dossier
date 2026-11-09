@@ -1,3 +1,4 @@
+import selectBox from '../common/selectBox';
 import app from 'flarum/admin/app';
 import Component from 'flarum/common/Component';
 import Button from 'flarum/common/components/Button';
@@ -95,17 +96,19 @@ export default class CatalogueEditor extends Component {
                   <td>{skill.name}</td>
                   <td>{skill.uses}</td>
                   <td>
-                    <select
-                      className="FormControl"
-                      aria-label={t('pending.category')}
-                      value={this.pendingCategory[skill.id] ?? skill.categoryId ?? ''}
-                      onchange={(e) => (this.pendingCategory[skill.id] = e.target.value)}
-                    >
-                      <option value="">{t('catalogue.no_category')}</option>
-                      {categories.map((c) => (
-                        <option value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
+                    {selectBox(
+                      <select
+                        className="Select-input FormControl"
+                        aria-label={t('pending.category')}
+                        value={this.pendingCategory[skill.id] ?? skill.categoryId ?? ''}
+                        onchange={(e) => (this.pendingCategory[skill.id] = e.target.value)}
+                      >
+                        <option value="">{t('catalogue.no_category')}</option>
+                        {categories.map((c) => (
+                          <option value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    )}
                   </td>
                   <td className="DossierAdmin-pendingActions">
                     <Button

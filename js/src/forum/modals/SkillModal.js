@@ -1,3 +1,4 @@
+import selectBox from '../../common/selectBox';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 import DossierModal from './DossierModal';
 import { t } from '../util';
@@ -40,21 +41,23 @@ export default class SkillModal extends DossierModal {
       this.field(
         'skillId',
         t('modals.skills.skill'),
-        <select className="FormControl" value={v.skill} onchange={(e) => (v.skill = e.target.value)}>
-          <option value="" disabled>
-            {t('modals.skills.pick')}
-          </option>
-          {groups
-            .filter((group) => group.skills.length)
-            .map((group) => (
-              <optgroup label={group.label}>
-                {group.skills.map((skill) => (
-                  <option value={String(skill.id)}>{skill.name}</option>
-                ))}
-              </optgroup>
-            ))}
-          {this.data.customSkills ? <option value={NEW}>{t('modals.skills.new_option')}</option> : null}
-        </select>
+        selectBox(
+          <select className="Select-input FormControl" value={v.skill} onchange={(e) => (v.skill = e.target.value)}>
+            <option value="" disabled>
+              {t('modals.skills.pick')}
+            </option>
+            {groups
+              .filter((group) => group.skills.length)
+              .map((group) => (
+                <optgroup label={group.label}>
+                  {group.skills.map((skill) => (
+                    <option value={String(skill.id)}>{skill.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+            {this.data.customSkills ? <option value={NEW}>{t('modals.skills.new_option')}</option> : null}
+          </select>
+        )
       ),
       v.skill === NEW ? (
         <div className="DossierModal-row">

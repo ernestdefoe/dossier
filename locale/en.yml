@@ -116,8 +116,8 @@ ernestdefoe-dossier:
         title: Open to
         help: Let people know what you'd welcome.
       timeline:
-        add: Add experience or education
-        edit: Edit experience or education
+        add: Add to your timeline
+        edit: Edit timeline entry
         kind: Type
         title_label: Job title
         title_placeholder: Senior backend developer
@@ -141,8 +141,8 @@ ernestdefoe-dossier:
         percent: Percent (optional)
         percent_help: Draws a bar beside the level.
       certificates:
-        add: Add a certificate or achievement
-        edit: Edit certificate or achievement
+        add: Add a certificate
+        edit: Edit certificate
         title_label: Title
         title_placeholder: AWS Certified Developer
         issuer: Issued by

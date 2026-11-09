@@ -1,3 +1,4 @@
+import selectBox from '../../common/selectBox';
 import Component from 'flarum/common/Component';
 import { t } from '../util';
 
@@ -13,20 +14,23 @@ export default class MonthField extends Component {
 
     return (
       <div className="DossierMonth">
-        <select
-          className="FormControl DossierMonth-month"
-          id={this.attrs.id}
-          name={this.attrs.name}
-          aria-label={t('modals.month')}
-          value={month || ''}
-          onchange={(e) => set(year, e.target.value)}
-          disabled={this.attrs.disabled}
-        >
-          <option value="">{t('modals.month')}</option>
-          {Array.from({ length: 12 }, (_, i) => (
-            <option value={String(i + 1).padStart(2, '0')}>{dayjs().month(i).format('MMMM')}</option>
-          ))}
-        </select>
+        {selectBox(
+          <select
+            className="Select-input FormControl"
+            id={this.attrs.id}
+            name={this.attrs.name}
+            aria-label={t('modals.month')}
+            value={month || ''}
+            onchange={(e) => set(year, e.target.value)}
+            disabled={this.attrs.disabled}
+          >
+            <option value="">{t('modals.month')}</option>
+            {Array.from({ length: 12 }, (_, i) => (
+              <option value={String(i + 1).padStart(2, '0')}>{dayjs().month(i).format('MMMM')}</option>
+            ))}
+          </select>,
+          'DossierMonth-month'
+        )}
         <input
           className="FormControl DossierMonth-year"
           type="number"
