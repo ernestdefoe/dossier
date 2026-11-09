@@ -36,10 +36,12 @@
     },
     "require-dev": {
         "flarum/phpstan": "^2.0",
-        "flarum/testing": "^2.0"
+        "flarum/testing": "^2.0",
+        "ernestdefoe/anthology": "^1.1"
     },
     "suggest": {
-        "ernestdefoe/projects": "Shows the member's projects on their dossier."
+        "ernestdefoe/projects": "Shows the member's projects on their dossier.",
+        "ernestdefoe/anthology": "Shows the series a writer has published on their dossier."
     },
     "autoload": {
         "psr-4": {
@@ -61,7 +63,8 @@
                 "color": "#fff"
             },
             "optional-dependencies": [
-                "ernestdefoe/projects"
+                "ernestdefoe/projects",
+                "ernestdefoe/anthology"
             ]
         }
     },

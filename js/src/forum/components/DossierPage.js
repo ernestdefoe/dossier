@@ -12,7 +12,12 @@ import useStyles from '../styles';
 import Timeline from './Timeline';
 import { monthLabel, LEVELS } from '../dates';
 
-const SECTIONS = ['about', 'timeline', 'skills', 'languages', 'projects', 'certificates', 'links', 'open_to'];
+const SECTIONS = ['about', 'timeline', 'skills', 'languages', 'projects', 'series', 'certificates', 'links', 'open_to'];
+const LINKED = { projects: 'projects.none', series: 'series.none' };
+
+/** Anthology lets the admin call a series a novel, a story or a book; Dossier's strings follow. */
+const noun = () => app.forum.attribute('anthologyNoun') || 'series';
+const title = (key) => t(`sections.${key}`, { noun: noun() });
 const VISIBILITY_ICONS = { everyone: 'fas fa-globe', members: 'fas fa-user-friends', private: 'fas fa-lock' };
 const LISTS = ['timeline', 'skills', 'languages', 'certificates', 'links'];
 
@@ -130,7 +135,7 @@ export default class DossierPage extends UserPage {
     const d = this.dossier;
     const data = key === 'open_to' ? d.openTo : d[key];
 
-    // null: hidden from this viewer, or (projects) Projects is not installed.
+    // null: hidden from this viewer, or (projects, series) Projects or Anthology is not installed.
     if (data === null || data === undefined) {
       if (!(this.editing && key === 'about')) return null;
     }
@@ -141,13 +146,13 @@ export default class DossierPage extends UserPage {
     return (
       <section className={`DossierSection DossierSection--${key}`} key={key}>
         <header className="DossierSection-header">
-          <h3 className="DossierSection-title">{t(`sections.${key}`)}</h3>
+          <h3 className="DossierSection-title">{title(key)}</h3>
           {this.editing ? this.sectionControls(key) : null}
         </header>
         {filled ? (
           this[`render_${key}`](data)
         ) : (
-          <p className="DossierSection-none">{t(key === 'projects' ? 'projects.none' : 'page.section_empty')}</p>
+          <p className="DossierSection-none">{t(LINKED[key] || 'page.section_empty', { noun: noun() })}</p>
         )}
       </section>
     );
@@ -160,6 +165,7 @@ export default class DossierPage extends UserPage {
       open_to: () => this.open('OpenToModal'),
       skills: () => this.open('SkillModal'),
       projects: null,
+      series: null,
     }[key];
     const addEntry = LISTS.includes(key) && key !== 'skills' ? () => this.open('EntryModal', { section: key }) : null;
     const action = add !== undefined ? add : addEntry;
@@ -173,7 +179,7 @@ export default class DossierPage extends UserPage {
             <select
               className="Select-input FormControl"
               value={level}
-              aria-label={t('visibility.label_for', { section: t(`sections.${key}`) })}
+              aria-label={t('visibility.label_for', { section: title(key) })}
               onchange={(e) => this.save('PATCH', '', { visibility: { [key]: e.target.value } })}
             >
               {['everyone', 'members', 'private'].map((value) => (
@@ -389,6 +395,41 @@ export default class DossierPage extends UserPage {
         {all ? (
           <Link className="DossierMore" href={app.route('user.projects', { username: this.user.slug() })}>
             {t('projects.all')} <Icon name="fas fa-arrow-right" />
+          </Link>
+        ) : null}
+      </div>
+    );
+  }
+
+  render_series(series) {
+    const show = app.routes['anthology.series'];
+
+    return (
+      <div className="DossierProjects DossierSeries">
+        <ul className="DossierProjects-list">
+          {series.map((item) => {
+            const id = item.id + (item.slug ? '-' + item.slug : '');
+
+            return (
+              <li className="DossierProject">
+                <Link className="DossierProject-link" href={show ? app.route('anthology.series', { id }) : `/series/${id}`}>
+                  <span className="DossierProject-image">
+                    {item.cover ? <img src={item.cover} alt="" loading="lazy" decoding="async" /> : <Icon name="fas fa-book-open" />}
+                  </span>
+                  <span className="DossierProject-text">
+                    <span className="DossierProject-title">{item.title}</span>
+                    <span className="DossierProject-excerpt">
+                      {[t('series.chapters', { count: item.chapters }), item.complete ? t('series.complete') : null].filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+        {app.routes['user.anthology'] ? (
+          <Link className="DossierMore" href={app.route('user.anthology', { username: this.user.slug() })}>
+            {t('series.all', { noun: noun() })} <Icon name="fas fa-arrow-right" />
           </Link>
         ) : null}
       </div>

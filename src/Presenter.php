@@ -2,9 +2,13 @@
 
 namespace Ernestdefoe\Dossier;
 
+// Anthology is optional: these names resolve only once seriesAvailable() has found it.
+use Ernestdefoe\Anthology\Covers;
+use Ernestdefoe\Anthology\Series;
 use Ernestdefoe\Dossier\Storage\Images;
 use Flarum\Extension\ExtensionManager;
 use Flarum\User\User;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -17,8 +21,8 @@ use Illuminate\Support\Collection;
  * edit the dossier.
  *
  * A fixed number of queries whatever the dossier holds: the dossier row, its
- * entries, the skills they name (with their categories, one join), and the
- * member's projects when Projects is enabled.
+ * entries, the skills they name (with their categories, one join), the
+ * member's projects when Projects is enabled, and their series when Anthology is.
  */
 class Presenter
 {
@@ -28,6 +32,7 @@ class Presenter
         protected Settings $settings,
         protected Images $images,
         protected ExtensionManager $extensions,
+        protected Container $container,
     ) {
     }
 
@@ -68,6 +73,7 @@ class Presenter
                 ? array_values(array_map(fn ($id) => ['id' => $id, 'label' => $openToNames[$id]], array_filter($dossier->open_to ?? [], fn ($id) => isset($openToNames[$id]))))
                 : null,
             'projects' => $sees('projects') ? $this->projects($owner, $actor) : null,
+            'series' => $sees('series') ? $this->series($owner, $actor) : null,
         ];
 
         if ($canEdit) {
@@ -222,5 +228,46 @@ class Presenter
     public function projectsAvailable(): bool
     {
         return class_exists(self::PROJECT) && $this->extensions->isEnabled('ernestdefoe-projects');
+    }
+
+    /**
+     * The member's series, as Anthology shows them to this viewer: only series
+     * with a chapter they can open, counting only those chapters. One query.
+     * Nothing without Anthology, or for a viewer who may not read series.
+     *
+     * @return list<array<string, mixed>>|null
+     */
+    private function series(User $owner, User $actor): ?array
+    {
+        if (! $this->seriesAvailable() || ! $actor->hasPermission('anthology.view')) {
+            return null;
+        }
+
+        $covers = $this->container->make(Covers::class);
+        $visible = fn (Builder $d) => $d->whereVisibleTo($actor);
+
+        return Series::query()
+            ->select(['anthology_series.id', 'title', 'slug', 'cover_path', 'status'])
+            ->where('user_id', $owner->id)
+            ->whereHas('discussions', $visible)
+            ->withCount(['discussions as chapter_count' => $visible])
+            ->orderByDesc('last_chapter_at')
+            ->orderByDesc('id')
+            ->limit(6)
+            ->get()
+            ->map(fn (Series $s) => [
+                'id' => $s->id,
+                'title' => $s->title,
+                'slug' => $s->slug,
+                'cover' => $covers->url($s),
+                'complete' => $s->status === 'complete',
+                'chapters' => (int) $s->getAttribute('chapter_count'),
+            ])
+            ->all();
+    }
+
+    public function seriesAvailable(): bool
+    {
+        return class_exists(Series::class) && $this->extensions->isEnabled('ernestdefoe-anthology');
     }
 }

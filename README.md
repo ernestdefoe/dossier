@@ -11,6 +11,7 @@ A [Flarum](https://flarum.org) 2 extension that gives every member a professiona
 - **Skills**: a level from 0 to 100 drawn as a bar, grouped by category. Members pick from a catalogue you keep, and can type their own when you allow it.
 - **Languages**: the CEFR level (A1 to C2, or Native) and an optional percent bar.
 - **Projects**: when [Projects](https://github.com/ernestdefoe/projects) is installed, the member's published projects as small cards that lead to their Projects tab.
+- **Series**: when [Anthology](https://github.com/ernestdefoe/anthology) is installed, the series a writer has published (or novels, stories or books, whichever word the forum uses), with their covers and chapter counts, leading to their Series tab.
 - **Certificates and achievements**: title, issuer, date, a verification link and an optional picture.
 - **Links**: website, LinkedIn, GitHub, GitLab, X, Mastodon and any other link, each with its icon.
 - **Open to**: chips such as collaboration, mentoring, freelance work and job offers. You choose the list.
