@@ -149,11 +149,7 @@ export default class DossierPage extends UserPage {
           <h3 className="DossierSection-title">{title(key)}</h3>
           {this.editing ? this.sectionControls(key) : null}
         </header>
-        {filled ? (
-          this[`render_${key}`](data)
-        ) : (
-          <p className="DossierSection-none">{t(LINKED[key] || 'page.section_empty', { noun: noun() })}</p>
-        )}
+        {filled ? this[`render_${key}`](data) : <p className="DossierSection-none">{t(LINKED[key] || 'page.section_empty', { noun: noun() })}</p>}
       </section>
     );
   }
