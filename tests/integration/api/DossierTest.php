@@ -112,7 +112,9 @@ class DossierTest extends TestCase
         $this->assertSame("Line one\nLine two <script>alert(1)</script>", $dossier['about']['bio']);
         $this->assertSame(['APIs', 'Databases'], $dossier['about']['specializations']);
         // An open-to chip the admin does not offer is dropped.
-        $this->assertSame([['id' => 'mentoring', 'label' => 'Mentoring']], $dossier['openTo']);
+        $this->assertSame(['mentoring'], array_column($dossier['openTo'], 'id'));
+        // The test install has no language pack, so the chip's name is its key here (translated on a forum).
+        $this->assertNotEmpty($dossier['openTo'][0]['label']);
         $this->assertSame('PHP', $dossier['skills'][0]['name']);
         $this->assertSame('Programming languages', $dossier['skills'][0]['category']);
         $this->assertNull($dossier['timeline'][0]['end']);
@@ -384,6 +386,37 @@ class DossierTest extends TestCase
         $response = $this->send($this->request('POST', "/api/dossiers/3/entries/$entry/image", ['authenticatedAs' => self::OWNER])
             ->withUploadedFiles(['image' => new UploadedFile($fake, (int) filesize($fake), UPLOAD_ERR_OK, 'cert.png', 'image/png')]));
         $this->assertSame(422, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function deleting_a_member_deletes_their_pictures(): void
+    {
+        $this->add('certificates', ['title' => 'Cert']);
+        $entry = $this->dossier(self::OWNER)['certificates'][0]['id'];
+        $png = tempnam(sys_get_temp_dir(), 'dossier');
+        imagepng(imagecreatetruecolor(20, 20), $png);
+        $this->send($this->request('POST', "/api/dossiers/3/entries/$entry/image", ['authenticatedAs' => self::OWNER])
+            ->withUploadedFiles(['image' => new UploadedFile($png, (int) filesize($png), UPLOAD_ERR_OK, 'c.png', 'image/png')]));
+        $stored = $this->database()->table('dossier_entries')->where('id', $entry)->value('image');
+        $disk = $this->app()->getContainer()->make(\Illuminate\Contracts\Filesystem\Factory::class)->disk('ernestdefoe-dossier');
+        $this->assertTrue($disk->exists($stored));
+
+        $this->assertSame(204, $this->call('DELETE', '/api/users/3', 1)->getStatusCode());
+        $this->assertFalse($disk->exists($stored));
+        $this->assertSame(0, $this->database()->table('dossier_entries')->where('user_id', 3)->count());
+    }
+
+    #[Test]
+    public function admins_manage_categories_and_a_deleted_category_keeps_its_skills(): void
+    {
+        $this->assertSame(403, $this->call('POST', '/api/dossier-catalogue/categories', self::MODERATOR, ['name' => 'Ops'])->getStatusCode());
+        $response = $this->call('POST', '/api/dossier-catalogue/categories', 1, ['name' => 'Ops']);
+        $this->assertSame(201, $response->getStatusCode());
+        $category = $this->json($response)['data']['id'];
+        $this->assertSame(201, $this->call('POST', '/api/dossier-catalogue/skills', 1, ['name' => 'Kubernetes', 'categoryId' => $category])->getStatusCode());
+        $this->assertSame(422, $this->call('POST', '/api/dossier-catalogue/skills', 1, ['name' => 'kubernetes'])->getStatusCode());
+        $this->assertSame(204, $this->call('DELETE', "/api/dossier-catalogue/categories/$category", 1)->getStatusCode());
+        $this->assertNull($this->database()->table('dossier_skills')->where('slug', 'kubernetes')->value('category_id'));
     }
 
     #[Test]

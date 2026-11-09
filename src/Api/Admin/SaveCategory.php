@@ -3,6 +3,7 @@
 namespace Ernestdefoe\Dossier\Api\Admin;
 
 use Ernestdefoe\Dossier\Input;
+use Ernestdefoe\Dossier\Skill;
 use Ernestdefoe\Dossier\SkillCategory;
 use Flarum\Http\RequestUtil;
 use Illuminate\Support\Arr;
@@ -38,7 +39,10 @@ class SaveCategory implements RequestHandlerInterface
         }
 
         if ($request->getMethod() === 'DELETE') {
-            SkillCategory::query()->findOrFail($id)->delete();
+            $category = SkillCategory::query()->findOrFail($id);
+            // Its skills stay, without a category (not left to the foreign key, which SQLite may not enforce).
+            Skill::query()->where('category_id', $category->id)->update(['category_id' => null]);
+            $category->delete();
 
             return new EmptyResponse();
         }

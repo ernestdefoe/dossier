@@ -8,7 +8,7 @@
  */
 
 use Ernestdefoe\Dossier\Api;
-use Ernestdefoe\Dossier\Listener\DeleteImages;
+use Ernestdefoe\Dossier\Listener\DeleteDossier;
 use Ernestdefoe\Dossier\Settings;
 use Ernestdefoe\Dossier\Storage\Images;
 use Ernestdefoe\Dossier\Visibility;
@@ -95,5 +95,5 @@ return [
         ]),
 
     (new Extend\Event())
-        ->listen(Deleting::class, DeleteImages::class),
+        ->listen(Deleting::class, DeleteDossier::class),
 ];
