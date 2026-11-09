@@ -4,6 +4,8 @@
 
 A [Flarum](https://flarum.org) 2 extension that gives every member a professional profile: a light résumé and skills showcase for developer and professional communities. It adds a **Dossier** tab to the profile, first in the list.
 
+![A member's dossier](screenshots/dossier-desktop.png)
+
 - **About**: a one-line headline shown under the member's name, their current role, a bio in plain text, and short lists of specializations and interests.
 - **Experience and education**: a vertical timeline drawn to scale. Each job or degree is a bar as long as it lasted, entries that overlap sit side by side, and work and education each have their own color.
 - **Skills**: a level from 0 to 100 drawn as a bar, grouped by category. Members pick from a catalogue you keep, and can type their own when you allow it.
@@ -14,6 +16,11 @@ A [Flarum](https://flarum.org) 2 extension that gives every member a professiona
 - **Open to**: chips such as collaboration, mentoring, freelance work and job offers. You choose the list.
 
 Members edit their dossier on the page itself: **Edit dossier** adds, changes, deletes and reorders entries in each section.
+
+
+| | |
+|---|---|
+| ![Skills, languages, projects and certificates](screenshots/dossier-skills.png) | ![On a phone, in dark mode](screenshots/dossier-phone-dark.png) |
 
 ## Private by design
 
