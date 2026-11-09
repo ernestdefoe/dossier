@@ -28,8 +28,8 @@ return [
     // already answers /u/{username}/dossier (and /posts) with the profile preloaded.
     (new Extend\Frontend('forum'))
         ->js(__DIR__.'/js/dist/forum.js')
-        ->jsDirectory(__DIR__.'/js/dist/forum')
-        ->css(__DIR__.'/less/forum.less'),
+        // No forum.css: the page's styles come with its chunk (less/page.less).
+        ->jsDirectory(__DIR__.'/js/dist/forum'),
 
     (new Extend\Frontend('admin'))
         ->js(__DIR__.'/js/dist/admin.js')

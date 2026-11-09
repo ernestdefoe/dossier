@@ -11,6 +11,7 @@ use Ernestdefoe\Dossier\SkillCategory;
 use Flarum\Http\RequestUtil;
 use Flarum\User\User;
 use Illuminate\Support\Arr;
+use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -45,7 +46,7 @@ class SaveSkill implements RequestHandlerInterface
                 Reach::refresh($owner);
             }
 
-            return new JsonResponse(null, 204);
+            return new EmptyResponse();
         }
 
         $skill = $id ? Skill::query()->findOrFail($id) : new Skill();

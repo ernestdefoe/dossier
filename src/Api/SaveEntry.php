@@ -91,7 +91,7 @@ class SaveEntry extends Controller
                 $this->input->fail('skillId', 'invalid_skill');
             }
         } else {
-            $name = $this->input->line($in['name'] ?? null, 60, 'name') ?? $this->input->fail('name', 'required');
+            $name = $this->input->line($in['name'] ?? null, 60, 'name') ?? $this->input->fail(array_key_exists('name', $in) ? 'name' : 'skillId', array_key_exists('name', $in) ? 'required' : 'invalid_skill');
             $skill = Skill::query()->where('slug', Skill::slugFor($name))->first();
 
             if (! $skill) {

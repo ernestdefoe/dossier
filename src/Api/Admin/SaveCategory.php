@@ -6,6 +6,7 @@ use Ernestdefoe\Dossier\Input;
 use Ernestdefoe\Dossier\SkillCategory;
 use Flarum\Http\RequestUtil;
 use Illuminate\Support\Arr;
+use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -33,13 +34,13 @@ class SaveCategory implements RequestHandlerInterface
                 SkillCategory::query()->where('id', $categoryId)->update(['position' => $position]);
             }
 
-            return new JsonResponse(null, 204);
+            return new EmptyResponse();
         }
 
         if ($request->getMethod() === 'DELETE') {
             SkillCategory::query()->findOrFail($id)->delete();
 
-            return new JsonResponse(null, 204);
+            return new EmptyResponse();
         }
 
         $category = $id ? SkillCategory::query()->findOrFail($id) : new SkillCategory();

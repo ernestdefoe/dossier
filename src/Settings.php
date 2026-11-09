@@ -51,7 +51,7 @@ class Settings
                     continue;
                 }
 
-                $label = $this->translator->trans("ernestdefoe-dossier.forum.open_to.$id");
+                $label = $this->translator->trans("ernestdefoe-dossier.lib.open_to.$id");
             }
 
             $options[$id] = ['id' => $id, 'label' => $label];
