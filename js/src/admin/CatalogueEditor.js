@@ -45,14 +45,17 @@ export default class CatalogueEditor extends Component {
         <h3>{t('catalogue.heading')}</h3>
         <p className="helpText">{t('catalogue.help')}</p>
 
-        {categories.map((category, index) =>
-          this.category(
-            category,
-            index,
-            approved.filter((s) => s.categoryId === category.id)
-          )
-        )}
-        {loose.length ? this.category(null, -1, loose) : null}
+        {/* One keyed list: the "No category" block is keyed too, so it can't sit beside the headings. */}
+        {[
+          ...categories.map((category, index) =>
+            this.category(
+              category,
+              index,
+              approved.filter((s) => s.categoryId === category.id)
+            )
+          ),
+          ...(loose.length ? [this.category(null, -1, loose)] : []),
+        ]}
 
         <form
           className="DossierAdmin-add"

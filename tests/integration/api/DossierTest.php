@@ -417,6 +417,12 @@ class DossierTest extends TestCase
         $this->assertSame(422, $this->call('POST', '/api/dossier-catalogue/skills', 1, ['name' => 'kubernetes'])->getStatusCode());
         $this->assertSame(204, $this->call('DELETE', "/api/dossier-catalogue/categories/$category", 1)->getStatusCode());
         $this->assertNull($this->database()->table('dossier_skills')->where('slug', 'kubernetes')->value('category_id'));
+
+        // The admin lists it under "No category" (Discuss d/40301 #5: that block broke the settings page).
+        $catalogue = $this->json($this->call('GET', '/api/dossier-catalogue?manage=1', 1))['data'];
+        $skill = collect($catalogue['skills'])->firstWhere('name', 'Kubernetes');
+        $this->assertTrue($skill['approved']);
+        $this->assertNull($skill['categoryId']);
     }
 
     #[Test]
