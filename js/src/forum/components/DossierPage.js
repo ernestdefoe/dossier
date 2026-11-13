@@ -12,8 +12,8 @@ import useStyles from '../styles';
 import Timeline from './Timeline';
 import { monthLabel, LEVELS } from '../dates';
 
-const SECTIONS = ['about', 'timeline', 'skills', 'languages', 'projects', 'series', 'certificates', 'links', 'open_to'];
-const LINKED = { projects: 'projects.none', series: 'series.none' };
+const SECTIONS = ['about', 'timeline', 'skills', 'languages', 'projects', 'series', 'builds', 'certificates', 'links', 'open_to'];
+const LINKED = { projects: 'projects.none', series: 'series.none', builds: 'builds.none' };
 
 /** Anthology lets the admin call a series a novel, a story or a book; Dossier's strings follow. */
 const noun = () => app.forum.attribute('anthologyNoun') || 'series';
@@ -135,7 +135,7 @@ export default class DossierPage extends UserPage {
     const d = this.dossier;
     const data = key === 'open_to' ? d.openTo : d[key];
 
-    // null: hidden from this viewer, or (projects, series) Projects or Anthology is not installed.
+    // null: hidden from this viewer, or (projects, series, builds) Projects, Anthology or Garage is not installed.
     if (data === null || data === undefined) {
       if (!(this.editing && key === 'about')) return null;
     }
@@ -162,6 +162,7 @@ export default class DossierPage extends UserPage {
       skills: () => this.open('SkillModal'),
       projects: null,
       series: null,
+      builds: null,
     }[key];
     const addEntry = LISTS.includes(key) && key !== 'skills' ? () => this.open('EntryModal', { section: key }) : null;
     const action = add !== undefined ? add : addEntry;
@@ -426,6 +427,43 @@ export default class DossierPage extends UserPage {
         {app.routes['user.anthology'] ? (
           <Link className="DossierMore" href={app.route('user.anthology', { username: this.user.slug() })}>
             {t('series.all', { noun: noun() })} <Icon name="fas fa-arrow-right" />
+          </Link>
+        ) : null}
+      </div>
+    );
+  }
+
+  render_builds(builds) {
+    const show = app.routes['garage.build'];
+
+    return (
+      <div className="DossierProjects DossierBuilds">
+        <ul className="DossierProjects-list">
+          {builds.map((build) => {
+            const id = build.id + (build.slug ? '-' + build.slug : '');
+
+            return (
+              <li className="DossierProject">
+                <Link className="DossierProject-link" href={show ? app.route('garage.build', { id }) : `/garage/${id}`}>
+                  <span className="DossierProject-image">
+                    {build.cover ? <img src={build.cover} alt="" loading="lazy" decoding="async" /> : <Icon name="fas fa-wrench" />}
+                  </span>
+                  <span className="DossierProject-text">
+                    <span className="DossierProject-title">{build.title}</span>
+                    <span className="DossierProject-excerpt">
+                      {[build.finishedAt ? t('builds.finished', { date: dayjs(build.finishedAt).format('MMM YYYY') }) : null, ...build.specs]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+        {app.routes['user.garage'] ? (
+          <Link className="DossierMore" href={app.route('user.garage', { username: this.user.slug() })}>
+            {t('builds.all')} <Icon name="fas fa-arrow-right" />
           </Link>
         ) : null}
       </div>

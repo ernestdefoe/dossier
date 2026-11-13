@@ -51,6 +51,7 @@ ernestdefoe-dossier:
       languages: Languages
       projects: Projects
       series: "{noun, select, novel {Novels} story {Stories} book {Books} other {Series}}"
+      builds: Finished builds
       certificates: Certificates and achievements
       links: Links
       open_to: Open to
@@ -93,6 +94,10 @@ ernestdefoe-dossier:
       all: "{noun, select, novel {All novels} story {All stories} book {All books} other {All series}}"
       chapters: "{count, plural, one {# chapter} other {# chapters}}"
       complete: Complete
+    builds:
+      none: Builds the member finishes in their Garage show up here.
+      all: See all on Garage
+      finished: "Finished {date}"
     certificates:
       verify: Verify
       picture_of: "Picture of {title}"

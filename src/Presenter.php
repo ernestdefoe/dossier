@@ -2,9 +2,13 @@
 
 namespace Ernestdefoe\Dossier;
 
-// Anthology is optional: these names resolve only once seriesAvailable() has found it.
+// Anthology and Garage are optional: these names resolve only once seriesAvailable() or buildsAvailable() has found them.
 use Ernestdefoe\Anthology\Covers;
 use Ernestdefoe\Anthology\Series;
+use ErnestDefoe\Garage\Build;
+use ErnestDefoe\Garage\Category as BuildCategory;
+use ErnestDefoe\Garage\Settings as GarageSettings;
+use ErnestDefoe\Garage\Storage\Photos;
 use Ernestdefoe\Dossier\Storage\Images;
 use Flarum\Extension\ExtensionManager;
 use Flarum\User\User;
@@ -22,7 +26,8 @@ use Illuminate\Support\Collection;
  *
  * A fixed number of queries whatever the dossier holds: the dossier row, its
  * entries, the skills they name (with their categories, one join), the
- * member's projects when Projects is enabled, and their series when Anthology is.
+ * member's projects when Projects is enabled, their series when Anthology is,
+ * and their finished builds (with their categories) when Garage is.
  */
 class Presenter
 {
@@ -74,6 +79,7 @@ class Presenter
                 : null,
             'projects' => $sees('projects') ? $this->projects($owner, $actor) : null,
             'series' => $sees('series') ? $this->series($owner, $actor) : null,
+            'builds' => $sees('builds') ? $this->builds($owner, $actor) : null,
         ];
 
         if ($canEdit) {
@@ -269,5 +275,81 @@ class Presenter
     public function seriesAvailable(): bool
     {
         return class_exists(Series::class) && $this->extensions->isEnabled('ernestdefoe-anthology');
+    }
+
+    /**
+     * The member's finished builds, newest finished first, as Garage shows them
+     * to this viewer: published only, never a draft, not even to the owner or a
+     * moderator. Two queries (builds, then their categories) however many there
+     * are; photos and specs are columns. Nothing without Garage, or for a viewer
+     * who may not see builds.
+     *
+     * @return list<array<string, mixed>>|null
+     */
+    private function builds(User $owner, User $actor): ?array
+    {
+        if (! $this->buildsAvailable() || ! ($actor->hasPermission(GarageSettings::VIEW) || $actor->hasPermission(GarageSettings::MODERATE))) {
+            return null;
+        }
+
+        $photos = $this->container->make(Photos::class);
+
+        return Build::query()
+            ->whereVisibleTo($actor)
+            ->where('garage_builds.user_id', $owner->id)
+            ->whereNotNull('garage_builds.published_at')
+            ->whereNotNull('garage_builds.finished_at')
+            ->with('category')
+            ->orderByDesc('garage_builds.finished_at')
+            ->orderByDesc('garage_builds.id')
+            ->limit(6)
+            ->get(['garage_builds.id', 'garage_builds.category_id', 'title', 'slug', 'specs', 'photos', 'finished_at'])
+            ->map(fn (Build $b) => [
+                'id' => $b->id,
+                'title' => $b->title,
+                'slug' => $b->slug,
+                'cover' => $photos->present($b->photos[0] ?? null)['small'] ?? null,
+                // A day, not a moment: a timestamp would read as the day before west of UTC.
+                'finishedAt' => $b->finished_at?->toDateString(),
+                'specs' => $this->buildSpecs($b->category, $b->specs ?? []),
+            ])
+            ->all();
+    }
+
+    /**
+     * The spec fields the build's category shows on Garage's cards, as "value unit",
+     * at most three, like Garage's own cards.
+     *
+     * @param array<string, string|float|int> $specs
+     * @return list<string>
+     */
+    private function buildSpecs(?BuildCategory $category, array $specs): array
+    {
+        $line = [];
+
+        foreach ($category->fields ?? [] as $field) {
+            if (empty($field['card']) || ($field['type'] ?? '') === 'link' || ! isset($specs[$field['key']])) {
+                continue;
+            }
+
+            $value = $specs[$field['key']];
+            if (($field['type'] ?? '') === 'number') {
+                // Grouped only from five digits: a year (1974) or a model number stays as typed.
+                $value = abs((float) $value) >= 10000 ? number_format((float) $value, floor((float) $value) == $value ? 0 : 1) : (string) $value;
+                $value = ! empty($field['unit']) ? "$value {$field['unit']}" : $value;
+            }
+
+            $line[] = (string) $value;
+            if (count($line) === 3) {
+                break;
+            }
+        }
+
+        return $line;
+    }
+
+    public function buildsAvailable(): bool
+    {
+        return class_exists(Build::class) && $this->extensions->isEnabled('ernestdefoe-garage');
     }
 }

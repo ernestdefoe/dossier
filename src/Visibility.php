@@ -20,7 +20,7 @@ final class Visibility
     public const LEVELS = [self::EVERYONE, self::MEMBERS, self::PRIVATE];
 
     /** The sections whose visibility can be chosen, in the order they are shown. */
-    public const SECTIONS = ['about', 'timeline', 'skills', 'languages', 'projects', 'series', 'certificates', 'links', 'open_to'];
+    public const SECTIONS = ['about', 'timeline', 'skills', 'languages', 'projects', 'series', 'builds', 'certificates', 'links', 'open_to'];
 
     /** A level as a number: the wider, the higher. users.dossier_reach keeps the widest one in use. */
     public const RANK = [self::PRIVATE => 1, self::MEMBERS => 2, self::EVERYONE => 3];

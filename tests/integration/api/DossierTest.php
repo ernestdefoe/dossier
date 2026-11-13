@@ -120,6 +120,9 @@ class DossierTest extends TestCase
         $this->assertNull($dossier['timeline'][0]['end']);
         $this->assertSame('fab fa-github', $dossier['links'][0]['icon']);
         $this->assertArrayNotHasKey('visibility', $dossier['links'][0]);
+        // Garage, Projects and Anthology are not enabled here: their sections are absent, not empty.
+        $this->assertNull($dossier['builds']);
+        $this->assertNull($dossier['projects']);
 
         $own = $this->dossier(self::OWNER);
         $this->assertTrue($own['canEdit']);
