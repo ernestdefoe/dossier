@@ -51,6 +51,14 @@ export const extend = [
       label: t('settings.custom_skills_label'),
       help: t('settings.custom_skills_help'),
     }))
+    .setting(() => ({
+      setting: 'ernestdefoe-dossier.pinned_builds',
+      type: 'number',
+      min: 0,
+      max: 6,
+      label: t('settings.pinned_builds_label'),
+      help: t('settings.pinned_builds_help'),
+    }))
     .permission(
       () => ({ icon: 'fas fa-id-card', label: t('permissions.view'), permission: 'ernestdefoe-dossier.view', allowGuest: true }),
       'view',

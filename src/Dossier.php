@@ -16,6 +16,7 @@ use Flarum\Database\AbstractModel;
  * @property list<string>|null $interests
  * @property list<string>|null $open_to
  * @property array<string, string>|null $visibility
+ * @property list<int>|null $pinned_builds
  * @property \Carbon\Carbon|null $updated_at
  */
 class Dossier extends AbstractModel
@@ -34,6 +35,7 @@ class Dossier extends AbstractModel
         'interests' => 'array',
         'open_to' => 'array',
         'visibility' => 'array',
+        'pinned_builds' => 'array',
         'updated_at' => 'datetime',
     ];
 

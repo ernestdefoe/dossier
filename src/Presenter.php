@@ -27,7 +27,7 @@ use Illuminate\Support\Collection;
  * A fixed number of queries whatever the dossier holds: the dossier row, its
  * entries, the skills they name (with their categories, one join), the
  * member's projects when Projects is enabled, their series when Anthology is,
- * and their finished builds (with their categories) when Garage is.
+ * and their finished builds (with their categories, pins first) when Garage is.
  */
 class Presenter
 {
@@ -79,11 +79,20 @@ class Presenter
                 : null,
             'projects' => $sees('projects') ? $this->projects($owner, $actor) : null,
             'series' => $sees('series') ? $this->series($owner, $actor) : null,
-            'builds' => $sees('builds') ? $this->builds($owner, $actor) : null,
+            'builds' => null,
         ];
+
+        $builds = $sees('builds') ? $this->builds($owner, $actor, $dossier, $canEdit) : null;
+        $out['builds'] = $builds ? array_slice($builds, 0, Settings::BUILDS_SHOWN) : $builds;
 
         if ($canEdit) {
             $out['visibility'] = $dossier->visibilities();
+
+            // What the pin window offers: every finished build, pins first. Same query, no extra one.
+            if ($builds !== null) {
+                $out['pinLimit'] = $this->settings->pinLimit();
+                $out['buildChoices'] = array_map(fn (array $b) => ['id' => $b['id'], 'title' => $b['title'], 'finishedAt' => $b['finishedAt'], 'pinned' => $b['pinned']], $builds);
+            }
         }
 
         return $out;
@@ -278,31 +287,42 @@ class Presenter
     }
 
     /**
-     * The member's finished builds, newest finished first, as Garage shows them
-     * to this viewer: published only, never a draft, not even to the owner or a
-     * moderator. Two queries (builds, then their categories) however many there
-     * are; photos and specs are columns. Nothing without Garage, or for a viewer
-     * who may not see builds.
+     * The member's finished builds as Garage shows them to this viewer: the
+     * ones they pinned first, in their order, then the rest newest finished
+     * first. Published only, never a draft, not even to the owner or a
+     * moderator, so a pin on a build that was since unpublished, deleted or
+     * reopened simply drops out. Two queries (builds, then their categories)
+     * however many there are; photos and specs are columns. Nothing without
+     * Garage, or for a viewer who may not see builds.
+     *
+     * Whoever may edit the dossier gets up to 100, for the pin window; others six.
      *
      * @return list<array<string, mixed>>|null
      */
-    private function builds(User $owner, User $actor): ?array
+    private function builds(User $owner, User $actor, Dossier $dossier, bool $canEdit): ?array
     {
         if (! $this->buildsAvailable() || ! ($actor->hasPermission(GarageSettings::VIEW) || $actor->hasPermission(GarageSettings::MODERATE))) {
             return null;
         }
 
         $photos = $this->container->make(Photos::class);
+        $pins = array_slice($dossier->pinned_builds ?? [], 0, $this->settings->pinLimit());
+        $query = $this->finishedBuilds($owner, $actor)->with('category');
 
-        return Build::query()
-            ->whereVisibleTo($actor)
-            ->where('garage_builds.user_id', $owner->id)
-            ->whereNotNull('garage_builds.published_at')
-            ->whereNotNull('garage_builds.finished_at')
-            ->with('category')
+        if ($pins) {
+            // CASE id WHEN pin1 THEN 0 WHEN pin2 THEN 1 … ELSE n END: pins first, in their order.
+            $id = $query->getQuery()->getGrammar()->wrap('garage_builds.id');
+            $bindings = [];
+            foreach ($pins as $position => $pin) {
+                array_push($bindings, $pin, $position);
+            }
+            $query->orderByRaw("CASE $id".str_repeat(' WHEN ? THEN ?', count($pins)).' ELSE ? END', [...$bindings, count($pins)]);
+        }
+
+        return $query
             ->orderByDesc('garage_builds.finished_at')
             ->orderByDesc('garage_builds.id')
-            ->limit(6)
+            ->limit($canEdit ? 100 : Settings::BUILDS_SHOWN)
             ->get(['garage_builds.id', 'garage_builds.category_id', 'title', 'slug', 'specs', 'photos', 'finished_at'])
             ->map(fn (Build $b) => [
                 'id' => $b->id,
@@ -312,8 +332,40 @@ class Presenter
                 // A day, not a moment: a timestamp would read as the day before west of UTC.
                 'finishedAt' => $b->finished_at?->toDateString(),
                 'specs' => $this->buildSpecs($b->category, $b->specs ?? []),
+                'pinned' => in_array($b->id, $pins, true),
             ])
             ->all();
+    }
+
+    /**
+     * The pins a member may keep: their own published, finished builds that the
+     * actor saving can see in Garage, in the order sent, at most the admin's
+     * limit. Anything else is dropped. One query.
+     *
+     * @param list<int> $ids
+     * @return list<int>|null
+     */
+    public function pinnable(User $owner, User $actor, array $ids): ?array
+    {
+        $ids = array_slice($ids, 0, $this->settings->pinLimit());
+
+        if (! $ids) {
+            return null;
+        }
+
+        $found = $this->finishedBuilds($owner, $actor)->whereIn('garage_builds.id', $ids)->pluck('garage_builds.id')->map(fn ($id) => (int) $id)->all();
+
+        return array_values(array_intersect($ids, $found)) ?: null;
+    }
+
+    /** @return Builder<Build> */
+    private function finishedBuilds(User $owner, User $actor): Builder
+    {
+        return Build::query()
+            ->whereVisibleTo($actor)
+            ->where('garage_builds.user_id', $owner->id)
+            ->whereNotNull('garage_builds.published_at')
+            ->whereNotNull('garage_builds.finished_at');
     }
 
     /**

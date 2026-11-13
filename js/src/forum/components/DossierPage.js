@@ -162,7 +162,7 @@ export default class DossierPage extends UserPage {
       skills: () => this.open('SkillModal'),
       projects: null,
       series: null,
-      builds: null,
+      builds: this.dossier.pinLimit && (this.dossier.buildChoices || []).length ? () => this.open('PinBuildsModal') : null,
     }[key];
     const addEntry = LISTS.includes(key) && key !== 'skills' ? () => this.open('EntryModal', { section: key }) : null;
     const action = add !== undefined ? add : addEntry;
@@ -189,10 +189,10 @@ export default class DossierPage extends UserPage {
         {action ? (
           <Button
             className="Button Button--primary DossierSection-add"
-            icon={key === 'about' || key === 'open_to' ? 'fas fa-pen' : 'fas fa-plus'}
+            icon={key === 'builds' ? 'fas fa-thumbtack' : key === 'about' || key === 'open_to' ? 'fas fa-pen' : 'fas fa-plus'}
             onclick={action}
           >
-            {key === 'about' || key === 'open_to' ? t('page.edit_section') : t('page.add')}
+            {key === 'builds' ? t('builds.pin') : key === 'about' || key === 'open_to' ? t('page.edit_section') : t('page.add')}
           </Button>
         ) : null}
       </div>
@@ -449,7 +449,15 @@ export default class DossierPage extends UserPage {
                     {build.cover ? <img src={build.cover} alt="" loading="lazy" decoding="async" /> : <Icon name="fas fa-wrench" />}
                   </span>
                   <span className="DossierProject-text">
-                    <span className="DossierProject-title">{build.title}</span>
+                    <span className="DossierProject-title">
+                      {build.pinned ? (
+                        <span className="DossierBuild-pin" title={t('builds.pinned')}>
+                          <Icon name="fas fa-thumbtack" />
+                          <span className="visually-hidden">{t('builds.pinned')}</span>
+                        </span>
+                      ) : null}
+                      {build.title}
+                    </span>
                     <span className="DossierProject-excerpt">
                       {[build.finishedAt ? t('builds.finished', { date: dayjs(build.finishedAt).format('MMM YYYY') }) : null, ...build.specs]
                         .filter(Boolean)

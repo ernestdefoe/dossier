@@ -11,7 +11,7 @@ use Ernestdefoe\Dossier\Settings;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-/** PATCH /api/dossiers/{id}: About, open-to chips and section visibility. */
+/** PATCH /api/dossiers/{id}: About, open-to chips, section visibility and pinned builds. */
 class UpdateDossier extends Controller
 {
     public function __construct(Presenter $presenter, protected Input $input, protected Settings $settings)
@@ -22,13 +22,21 @@ class UpdateDossier extends Controller
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         [$actor, $owner] = $this->editable($request);
-        $changes = $this->input->about($this->body($request), array_column($this->settings->openTo(), 'id'));
+        $body = $this->body($request);
+        $changes = $this->input->about($body, array_column($this->settings->openTo(), 'id'));
 
         $dossier = Dossier::query()->find($owner->id) ?? new Dossier();
         $dossier->user_id = $owner->id;
 
         if (isset($changes['visibility'])) {
             $changes['visibility'] = $changes['visibility'] + ($dossier->visibility ?? []);
+        }
+
+        // Pins sent are checked against Garage; pins kept are checked again on every save, so stale ones drop out.
+        // Without Garage they are left as they are, for when it comes back.
+        $pins = array_key_exists('pinnedBuilds', $body) ? $this->input->ids($body['pinnedBuilds'], 'pinnedBuilds', $this->settings->pinLimit()) : $dossier->pinned_builds;
+        if ($pins !== null && $this->presenter->buildsAvailable()) {
+            $changes['pinned_builds'] = $this->presenter->pinnable($owner, $actor, $pins);
         }
 
         foreach ($changes as $key => $value) {

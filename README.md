@@ -12,7 +12,7 @@ A [Flarum](https://flarum.org) 2 extension that gives every member a professiona
 - **Languages**: the CEFR level (A1 to C2, or Native) and an optional percent bar.
 - **Projects**: when [Projects](https://github.com/ernestdefoe/projects) is installed, the member's published projects as small cards that lead to their Projects tab.
 - **Series**: when [Anthology](https://github.com/ernestdefoe/anthology) is installed, the series a writer has published (or novels, stories or books, whichever word the forum uses), with their covers and chapter counts, leading to their Series tab.
-- **Finished builds**: when [Garage](https://github.com/ernestdefoe/garage) is installed, the builds a member has finished (newest first, up to six), with each cover, when it was finished and the specs its category shows on cards, leading to their Garage. Drafts never show, not even to the owner.
+- **Finished builds**: when [Garage](https://github.com/ernestdefoe/garage) is installed, the builds a member has finished (up to six), with each cover, when it was finished and the specs its category shows on cards, leading to their Garage. Members can pin up to three of them (the admin sets how many, 0 turns it off) to show first in their own order; the rest follow newest first. Drafts never show, not even to the owner.
 - **Certificates and achievements**: title, issuer, date, a verification link and an optional picture.
 - **Links**: website, LinkedIn, GitHub, GitLab, X, Mastodon and any other link, each with its icon.
 - **Open to**: chips such as collaboration, mentoring, freelance work and job offers. You choose the list.

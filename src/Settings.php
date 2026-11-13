@@ -14,6 +14,11 @@ class Settings
 
     public const OPEN_TO = 'ernestdefoe-dossier.open_to';
 
+    public const PINNED_BUILDS = 'ernestdefoe-dossier.pinned_builds';
+
+    /** Finished builds a dossier shows; pins come out of these. */
+    public const BUILDS_SHOWN = 6;
+
     /** The chips a fresh install offers; their names come from the locale until the admin renames them. */
     public const OPEN_TO_DEFAULT = '[{"id":"collaboration"},{"id":"mentoring"},{"id":"freelance"},{"id":"jobs"}]';
 
@@ -26,6 +31,12 @@ class Settings
     public function customSkills(): bool
     {
         return (bool) $this->settings->get(self::CUSTOM_SKILLS, true);
+    }
+
+    /** How many finished builds a member may pin; 0 turns pinning off. */
+    public function pinLimit(): int
+    {
+        return max(0, min(self::BUILDS_SHOWN, (int) $this->settings->get(self::PINNED_BUILDS, 3)));
     }
 
     /**

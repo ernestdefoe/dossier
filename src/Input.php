@@ -142,6 +142,30 @@ class Input
         ];
     }
 
+    /**
+     * A list of ids, each once, in the order sent; at most $max.
+     *
+     * @return list<int>
+     */
+    public function ids(mixed $value, string $field, int $max): array
+    {
+        if ($value === null) {
+            return [];
+        }
+
+        if (! is_array($value) || array_filter($value, fn ($id) => ! is_int($id) && ! (is_string($id) && ctype_digit($id)))) {
+            $this->fail($field, 'invalid');
+        }
+
+        $ids = array_values(array_unique(array_map('intval', $value)));
+
+        if (count($ids) > $max) {
+            $this->fail($field, 'too_many', ['max' => $max]);
+        }
+
+        return $ids;
+    }
+
     public function line(mixed $value, int $max, string $field): ?string
     {
         if ($value === null) {

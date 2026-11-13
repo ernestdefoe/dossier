@@ -48,6 +48,7 @@ return [
         ->default(Settings::DEFAULT_TAB, true)
         ->default(Settings::CUSTOM_SKILLS, true)
         ->default(Settings::OPEN_TO, Settings::OPEN_TO_DEFAULT)
+        ->default('ernestdefoe-dossier.pinned_builds', 3)
         ->serializeToForum('dossierDefault', Settings::DEFAULT_TAB, 'boolval'),
 
     (new Extend\Routes('api'))

@@ -3,3 +3,4 @@ export { default as AboutModal } from './AboutModal';
 export { default as EntryModal } from './EntryModal';
 export { default as SkillModal } from './SkillModal';
 export { default as OpenToModal } from './OpenToModal';
+export { default as PinBuildsModal } from './PinBuildsModal';
