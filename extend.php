@@ -9,8 +9,6 @@
 
 use Ernestdefoe\Dossier\Api;
 use Ernestdefoe\Dossier\Listener\DeleteDossier;
-use Ernestdefoe\Dossier\Settings;
-use Ernestdefoe\Dossier\Storage\Images;
 use Ernestdefoe\Dossier\Visibility;
 use Flarum\Api\Context;
 use Flarum\Api\Resource\ForumResource;
@@ -38,18 +36,20 @@ return [
     new Extend\Locales(__DIR__.'/locale'),
 
     (new Extend\Filesystem())
-        ->disk(Images::DISK, fn (Paths $paths, UrlGenerator $url) => [
+        ->disk('ernestdefoe-dossier', fn (Paths $paths, UrlGenerator $url) => [
             'root' => "$paths->public/assets/dossier",
             'url' => $url->to('forum')->path('assets/dossier'),
             'visibility' => 'public',
         ]),
 
+    // String literals, not Settings:: constants: reading a class here autoloads it at boot,
+    // and while a deploy swaps composer's autoload map that fatals every request.
     (new Extend\Settings())
-        ->default(Settings::DEFAULT_TAB, true)
-        ->default(Settings::CUSTOM_SKILLS, true)
-        ->default(Settings::OPEN_TO, Settings::OPEN_TO_DEFAULT)
+        ->default('ernestdefoe-dossier.default_tab', true)
+        ->default('ernestdefoe-dossier.custom_skills', true)
+        ->default('ernestdefoe-dossier.open_to', '[{"id":"collaboration"},{"id":"mentoring"},{"id":"freelance"},{"id":"jobs"}]')
         ->default('ernestdefoe-dossier.pinned_builds', 3)
-        ->serializeToForum('dossierDefault', Settings::DEFAULT_TAB, 'boolval'),
+        ->serializeToForum('dossierDefault', 'ernestdefoe-dossier.default_tab', 'boolval'),
 
     (new Extend\Routes('api'))
         ->get('/dossiers/{id:\d+}', 'dossier.show', Api\ShowDossier::class)
