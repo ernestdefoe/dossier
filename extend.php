@@ -9,6 +9,7 @@
 
 use Ernestdefoe\Dossier\Api;
 use Ernestdefoe\Dossier\Listener\DeleteDossier;
+use Ernestdefoe\Dossier\Syllabus;
 use Ernestdefoe\Dossier\Visibility;
 use Flarum\Api\Context;
 use Flarum\Api\Resource\ForumResource;
@@ -97,4 +98,10 @@ return [
 
     (new Extend\Event())
         ->listen(Deleting::class, DeleteDossier::class),
+
+    // Syllabus certificates and the skills they earned, read from its public achievements API.
+    (new Extend\Conditional())
+        ->whenExtensionEnabled('ernestdefoe-syllabus', fn () => [
+            (new Extend\ServiceProvider())->register(Syllabus\SyllabusServiceProvider::class),
+        ]),
 ];

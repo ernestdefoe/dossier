@@ -316,6 +316,7 @@ export default class DossierPage extends UserPage {
                 <li className="DossierBar">
                   <div className="DossierBar-label">
                     <span className="DossierBar-name">{skill.name}</span>
+                    {skill.verified ? this.verifiedBadge(skill.verified) : null}
                     <span className="DossierBar-value">{skill.level}%</span>
                   </div>
                   <div
@@ -335,6 +336,19 @@ export default class DossierPage extends UserPage {
           </div>
         ))}
       </div>
+    );
+  }
+
+  /** "Verified": a course earned this skill. The tooltip (and screen readers) name the course. */
+  verifiedBadge(courses) {
+    const label = t('skills.verified_by', { courses: courses.join(', ') });
+
+    return (
+      <Tooltip text={label}>
+        <span className="DossierVerified" tabindex="0" aria-label={label}>
+          <Icon name="fas fa-check-circle" /> {t('skills.verified')}
+        </span>
+      </Tooltip>
     );
   }
 
@@ -479,11 +493,24 @@ export default class DossierPage extends UserPage {
   }
 
   render_certificates(certificates) {
+    // Only the member's own certificates can be edited and reordered; course certificates come from Syllabus.
+    const own = certificates.filter((c) => !c.syllabus);
+
     return (
       <ul className="DossierCertificates">
         {certificates.map((certificate) => (
-          <li className="DossierCertificate">
-            {certificate.thumb ? (
+          <li
+            className={
+              'DossierCertificate' +
+              (certificate.syllabus ? ' DossierCertificate--course' : '') +
+              (certificate.hidden ? ' DossierCertificate--hidden' : '')
+            }
+          >
+            {certificate.syllabus ? (
+              <span className="DossierCertificate-image DossierCertificate-image--none">
+                <Icon name="fas fa-graduation-cap" />
+              </span>
+            ) : certificate.thumb ? (
               <a className="DossierCertificate-image" href={certificate.image} target="_blank" rel="noopener">
                 <img src={certificate.thumb} alt={t('certificates.picture_of', { title: certificate.title })} loading="lazy" decoding="async" />
               </a>
@@ -497,16 +524,43 @@ export default class DossierPage extends UserPage {
               <span className="DossierCertificate-meta">
                 {[certificate.issuer, certificate.issued ? monthLabel(certificate.issued) : null].filter(Boolean).join(' · ')}
               </span>
+              {certificate.syllabus ? (
+                <span className="DossierCertificate-source">
+                  {t('certificates.from_course')}
+                  {certificate.hidden ? ' · ' + t('certificates.hidden') : ''}
+                </span>
+              ) : null}
               {certificate.url ? (
                 <a className="DossierCertificate-verify" href={certificate.url} target="_blank" rel="nofollow noopener noreferrer">
                   <Icon name="fas fa-external-link-alt" /> {t('certificates.verify')}
                 </a>
               ) : null}
             </div>
-            {this.entryControls('certificates', certificate, certificates)}
+            {certificate.syllabus ? this.courseCertificateControls(certificate) : this.entryControls('certificates', certificate, own)}
           </li>
         ))}
       </ul>
+    );
+  }
+
+  /** A course certificate can't be edited here, only hidden from the dossier or shown again. */
+  courseCertificateControls(certificate) {
+    if (!this.editing) return null;
+
+    const toggle = () => this.save('PATCH', '', { certificate: { code: certificate.code, hidden: !certificate.hidden } });
+
+    return (
+      <div className="DossierEntry-controls">
+        <Button
+          className="Button Button--flat DossierCertificate-toggle"
+          icon={certificate.hidden ? 'fas fa-eye' : 'fas fa-eye-slash'}
+          aria-pressed={certificate.hidden ? 'true' : 'false'}
+          aria-label={t(certificate.hidden ? 'certificates.show_on' : 'certificates.hide_from', { title: certificate.title })}
+          onclick={toggle}
+        >
+          {t(certificate.hidden ? 'certificates.show' : 'certificates.hide')}
+        </Button>
+      </div>
     );
   }
 

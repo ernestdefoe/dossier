@@ -1,10 +1,15 @@
 import selectBox from '../../common/selectBox';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
+import Tooltip from 'flarum/common/components/Tooltip';
+import Icon from 'flarum/common/components/Icon';
 import DossierModal from './DossierModal';
 import { t } from '../util';
 import catalogue, { forgetCatalogue } from './catalogue';
 
 const NEW = 'new';
+
+/** A skill's name as the server compares it (Skill::slugFor): trimmed, spaces collapsed, lower case. */
+const slug = (name) => String(name).trim().replace(/\s+/g, ' ').toLowerCase();
 
 /** Pick a skill from the catalogue (or type one of your own) and a level. */
 export default class SkillModal extends DossierModal {
@@ -33,11 +38,15 @@ export default class SkillModal extends DossierModal {
     // The skill being edited may be someone's own skill that is not in the list.
     if (entry && !skills.some((s) => s.id === entry.skillId)) skills.push({ id: entry.skillId, name: entry.name, categoryId: entry.categoryId });
 
+    const earned = this.earned(skills);
+    const verified = new Map((this.attrs.page.dossier.earnedSkills || []).map((skill) => [slug(skill.name), skill]));
+
     const groups = this.data.categories.map((category) => ({ label: category.name, skills: skills.filter((s) => s.categoryId === category.id) }));
     const known = new Set(this.data.categories.map((c) => c.id));
     groups.push({ label: t('skills.other'), skills: skills.filter((s) => !known.has(s.categoryId)) });
 
     return [
+      !entry && earned.length ? this.earnedPicker(earned) : null,
       this.field(
         'skillId',
         t('modals.skills.skill'),
@@ -51,15 +60,22 @@ export default class SkillModal extends DossierModal {
               .map((group) => (
                 <optgroup label={group.label}>
                   {group.skills.map((skill) => (
-                    <option value={String(skill.id)}>{skill.name}</option>
+                    <option value={String(skill.id)}>
+                      {verified.has(slug(skill.name)) ? t('modals.skills.verified_option', { name: skill.name }) : skill.name}
+                    </option>
                   ))}
                 </optgroup>
               ))}
-            {this.data.customSkills ? <option value={NEW}>{t('modals.skills.new_option')}</option> : null}
+            {this.data.customSkills ? (
+              <option value={NEW}>{t('modals.skills.new_option')}</option>
+            ) : v.skill === NEW && this.isEarned(v.name) ? (
+              // Typed skills are off, but a skill a course earned can still be added.
+              <option value={NEW}>{t('modals.skills.verified_option', { name: v.name })}</option>
+            ) : null}
           </select>
         )
       ),
-      v.skill === NEW ? (
+      v.skill === NEW && this.data.customSkills ? (
         <div className="DossierModal-row">
           {this.field('name', t('modals.skills.name'), this.text('name', { maxlength: 60 }), t('modals.skills.name_help'))}
           {this.field('categoryId', t('modals.skills.category'), this.select('categoryId', this.categoryOptions()))}
@@ -92,6 +108,64 @@ export default class SkillModal extends DossierModal {
         </div>
       ),
     ];
+  }
+
+  isEarned(name) {
+    return (this.attrs.page.dossier.earnedSkills || []).some((skill) => slug(skill.name) === slug(name));
+  }
+
+  /**
+   * The skills the member's courses earned that aren't on the dossier yet,
+   * each matched to its catalogue skill when there is one (by name, any case).
+   */
+  earned(available) {
+    const onDossier = new Set((this.attrs.page.dossier.skills || []).map((s) => slug(s.name)));
+    const byName = new Map(available.map((skill) => [slug(skill.name), skill]));
+
+    return (this.attrs.page.dossier.earnedSkills || [])
+      .filter((skill) => !onDossier.has(slug(skill.name)))
+      .map((skill) => ({ ...skill, catalogue: byName.get(slug(skill.name)) || null }));
+  }
+
+  /** One button per earned skill, badged "Verified"; picking one fills in the skill. */
+  earnedPicker(earned) {
+    const v = this.values;
+
+    return (
+      <fieldset className="Form-group DossierEarned">
+        <legend>{t('modals.skills.earned')}</legend>
+        <div className="DossierEarned-list">
+          {earned.map((skill) => {
+            const chosen = skill.catalogue ? v.skill === String(skill.catalogue.id) : v.skill === NEW && v.name === skill.name;
+            const label = t('skills.verified_by', { courses: skill.courses.join(', ') });
+
+            // The tooltip sits on the badge: on the button it would replace the button's name for screen readers.
+            return (
+              <button
+                type="button"
+                className={'Button DossierEarned-skill' + (chosen ? ' DossierEarned-skill--chosen' : '')}
+                aria-pressed={chosen ? 'true' : 'false'}
+                onclick={() => {
+                  if (skill.catalogue) {
+                    v.skill = String(skill.catalogue.id);
+                  } else {
+                    v.skill = NEW;
+                    v.name = skill.name;
+                  }
+                }}
+              >
+                <span className="DossierEarned-name">{skill.name}</span>
+                <Tooltip text={label}>
+                  <span className="DossierVerified" aria-label={label}>
+                    <Icon name="fas fa-check-circle" /> {t('skills.verified')}
+                  </span>
+                </Tooltip>
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
+    );
   }
 
   categoryOptions() {

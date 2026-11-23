@@ -76,6 +76,8 @@ ernestdefoe-dossier:
       months: "{count, plural, one {# month} other {# months}}"
     skills:
       other: Other
+      verified: Verified
+      verified_by: "Verified: earned in {courses}"
     languages:
       native: Native
       levels:
@@ -103,6 +105,12 @@ ernestdefoe-dossier:
     certificates:
       verify: Verify
       picture_of: "Picture of {title}"
+      from_course: Course certificate
+      hidden: Hidden from your dossier
+      hide: Hide
+      show: Show
+      hide_from: "Hide {title} from your dossier"
+      show_on: "Show {title} on your dossier"
     links:
       kinds:
         website: Website
@@ -192,6 +200,8 @@ ernestdefoe-dossier:
         category: Category
         level: Level
         level_percent: Level in percent
+        earned: Earned in your courses
+        verified_option: "{name} (verified)"
   admin:
     save: Save
     saved: Saved

@@ -166,6 +166,22 @@ class Input
         return $ids;
     }
 
+    /**
+     * One certificate to hide or show: {code, hidden}.
+     *
+     * @return array{0: string, 1: bool}
+     */
+    public function certificateToggle(mixed $value, string $field): array
+    {
+        $code = is_array($value) ? ($value['code'] ?? null) : null;
+
+        if (! is_string($code) || ! preg_match('/^[A-Za-z0-9_-]{1,64}$/', $code) || ! is_bool($value['hidden'] ?? null)) {
+            $this->fail($field, 'invalid');
+        }
+
+        return [$code, $value['hidden']];
+    }
+
     public function line(mixed $value, int $max, string $field): ?string
     {
         if ($value === null) {

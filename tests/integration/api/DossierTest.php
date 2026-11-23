@@ -127,6 +127,10 @@ class DossierTest extends TestCase
         $own = $this->dossier(self::OWNER);
         $this->assertTrue($own['canEdit']);
         $this->assertSame('everyone', $own['visibility']['skills']);
+        // Nor is Syllabus: no course certificates, no verified skills, nothing earned.
+        $this->assertSame([], $own['earnedSkills']);
+        $this->assertSame([null], array_unique(array_column($dossier['skills'], 'verified')));
+        $this->assertSame([], array_filter($dossier['certificates'], fn ($c) => ! empty($c['syllabus'])));
     }
 
     /** @return array<string, array{0: string, 1: bool, 2: bool, 3: bool}> */

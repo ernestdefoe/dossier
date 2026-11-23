@@ -3,6 +3,7 @@
 namespace Ernestdefoe\Dossier\Api;
 
 use Carbon\Carbon;
+use Ernestdefoe\Dossier\Earned;
 use Ernestdefoe\Dossier\Entry;
 use Ernestdefoe\Dossier\Input;
 use Ernestdefoe\Dossier\Presenter;
@@ -25,7 +26,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class SaveEntry extends Controller
 {
-    public function __construct(Presenter $presenter, protected Input $input, protected Settings $settings, protected Cache $cache)
+    public function __construct(Presenter $presenter, protected Input $input, protected Settings $settings, protected Cache $cache, protected Earned $earned)
     {
         parent::__construct($presenter);
     }
@@ -95,7 +96,8 @@ class SaveEntry extends Controller
             $skill = Skill::query()->where('slug', Skill::slugFor($name))->first();
 
             if (! $skill) {
-                if (! $this->settings->customSkills() && ! $actor->isAdmin()) {
+                // A skill one of the member's courses earned can always be added, even with typed skills off.
+                if (! $this->settings->customSkills() && ! $actor->isAdmin() && ! $this->earnedSkill($owner, $name)) {
                     $this->input->fail('name', 'custom_skills_off');
                 }
 
@@ -136,5 +138,18 @@ class SaveEntry extends Controller
         }
 
         return $skill->id;
+    }
+
+    private function earnedSkill(User $owner, string $name): bool
+    {
+        $slug = Skill::slugFor($name);
+
+        foreach ($this->earned->forMember($owner, $owner)['skills'] ?? [] as $skill) {
+            if (Skill::slugFor((string) $skill['name']) === $slug) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
