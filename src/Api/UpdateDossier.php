@@ -4,6 +4,7 @@ namespace Ernestdefoe\Dossier\Api;
 
 use Carbon\Carbon;
 use Ernestdefoe\Dossier\Dossier;
+use Ernestdefoe\Dossier\FinishedBuilds;
 use Ernestdefoe\Dossier\Input;
 use Ernestdefoe\Dossier\Presenter;
 use Ernestdefoe\Dossier\Reach;
@@ -14,7 +15,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /** PATCH /api/dossiers/{id}: About, open-to chips, section visibility, pinned builds and hidden Syllabus certificates. */
 class UpdateDossier extends Controller
 {
-    public function __construct(Presenter $presenter, protected Input $input, protected Settings $settings)
+    public function __construct(Presenter $presenter, protected Input $input, protected Settings $settings, protected FinishedBuilds $builds)
     {
         parent::__construct($presenter);
     }
@@ -35,8 +36,8 @@ class UpdateDossier extends Controller
         // Pins sent are checked against Garage; pins kept are checked again on every save, so stale ones drop out.
         // Without Garage they are left as they are, for when it comes back.
         $pins = array_key_exists('pinnedBuilds', $body) ? $this->input->ids($body['pinnedBuilds'], 'pinnedBuilds', $this->settings->pinLimit()) : $dossier->pinned_builds;
-        if ($pins !== null && $this->presenter->buildsAvailable()) {
-            $changes['pinned_builds'] = $this->presenter->pinnable($owner, $actor, $pins);
+        if ($pins !== null && $this->builds->available()) {
+            $changes['pinned_builds'] = $this->builds->pinnable($owner, $actor, array_slice($pins, 0, $this->settings->pinLimit())) ?: null;
         }
 
         // Hiding a certificate only lists its code here; Syllabus keeps the certificate. One code

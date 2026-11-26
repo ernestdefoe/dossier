@@ -9,6 +9,9 @@
 
 use Ernestdefoe\Dossier\Api;
 use Ernestdefoe\Dossier\Listener\DeleteDossier;
+use Ernestdefoe\Dossier\Anthology;
+use Ernestdefoe\Dossier\Garage;
+use Ernestdefoe\Dossier\Projects;
 use Ernestdefoe\Dossier\Syllabus;
 use Ernestdefoe\Dossier\Visibility;
 use Flarum\Api\Context;
@@ -99,9 +102,19 @@ return [
     (new Extend\Event())
         ->listen(Deleting::class, DeleteDossier::class),
 
-    // Syllabus certificates and the skills they earned, read from its public achievements API.
+    // Optional extensions: each one's reader is bound only while it is enabled; otherwise a class
+    // that returns nothing stands in, and nothing of the absent extension is ever loaded.
     (new Extend\Conditional())
         ->whenExtensionEnabled('ernestdefoe-syllabus', fn () => [
             (new Extend\ServiceProvider())->register(Syllabus\SyllabusServiceProvider::class),
+        ])
+        ->whenExtensionEnabled('ernestdefoe-garage', fn () => [
+            (new Extend\ServiceProvider())->register(Garage\GarageServiceProvider::class),
+        ])
+        ->whenExtensionEnabled('ernestdefoe-projects', fn () => [
+            (new Extend\ServiceProvider())->register(Projects\ProjectsServiceProvider::class),
+        ])
+        ->whenExtensionEnabled('ernestdefoe-anthology', fn () => [
+            (new Extend\ServiceProvider())->register(Anthology\AnthologyServiceProvider::class),
         ]),
 ];

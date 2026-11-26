@@ -250,4 +250,78 @@ class BuildsSectionTest extends TestCase
         $this->assertNull($this->builds(null));
         $this->assertSame('Older finished', $this->builds(4)[0]['title']);
     }
+
+    /** Member 3 on member 4's builds: accepted with and without a role, and a pending invite. */
+    private function joinTeams(): void
+    {
+        $now = Carbon::now();
+        $this->database()->table('garage_builds')->insert([
+            $this->build(6, 'Team rig', finished: '2026-08-01', owner: 4),
+            $this->build(7, 'Invited, not accepted', finished: '2026-07-01', owner: 4),
+            $this->build(8, 'Team draft', finished: '2026-07-15', published: false, owner: 4),
+        ]);
+        $this->database()->table('garage_members')->insert([
+            ['build_id' => 5, 'user_id' => 3, 'role' => null, 'status' => 'accepted', 'created_at' => $now, 'accepted_at' => $now],
+            ['build_id' => 6, 'user_id' => 3, 'role' => 'Backend developer', 'status' => 'accepted', 'created_at' => $now, 'accepted_at' => $now],
+            ['build_id' => 7, 'user_id' => 3, 'role' => 'Tester', 'status' => 'pending', 'created_at' => $now, 'accepted_at' => null],
+            ['build_id' => 8, 'user_id' => 3, 'role' => 'Designer', 'status' => 'accepted', 'created_at' => $now, 'accepted_at' => $now],
+        ]);
+    }
+
+    #[Test]
+    public function team_builds_show_beside_own_builds_with_the_members_role(): void
+    {
+        $this->joinTeams();
+
+        // Guest, member, owner and admin: own and accepted team builds, newest finished first;
+        // never a pending invite or a draft, whoever's it is.
+        foreach ([null, 4, 3, 1] as $as) {
+            $builds = $this->builds($as);
+            $this->assertSame(['Newest finished', 'Someone else', 'Team rig', 'Older finished'], array_column($builds, 'title'), 'as '.($as ?? 'guest'));
+            // null: their own; '': on the team without a role; otherwise the role.
+            $this->assertSame([null, '', 'Backend developer', null], array_column($builds, 'role'));
+        }
+    }
+
+    #[Test]
+    public function a_team_build_can_be_pinned_but_an_invite_or_a_draft_cannot(): void
+    {
+        $this->joinTeams();
+
+        $this->assertSame(200, $this->pin([6, 7, 8])->getStatusCode());
+        $this->assertSame([6], $this->storedPins());
+        $this->assertSame(['Team rig', true, 'Backend developer'], [$this->builds(null)[0]['title'], $this->builds(null)[0]['pinned'], $this->builds(null)[0]['role']]);
+    }
+
+    #[Test]
+    public function team_builds_cost_the_same_queries_with_one_or_twenty(): void
+    {
+        $count = function (?int $as): int {
+            $this->builds($as);
+            $db = $this->app()->getContainer()->make(ConnectionInterface::class);
+            $db->flushQueryLog();
+            $db->enableQueryLog();
+            $this->builds($as);
+            $queries = count($db->getQueryLog());
+            $db->disableQueryLog();
+
+            return $queries;
+        };
+
+        $now = Carbon::now();
+        $join = function (int $from, int $to) use ($now) {
+            for ($i = $from; $i < $to; $i++) {
+                $this->database()->table('garage_builds')->insert($this->build($i, "Team $i", finished: '2026-11-0'.(1 + $i % 9), owner: 4));
+                $this->database()->table('garage_members')->insert(['build_id' => $i, 'user_id' => 3, 'role' => "Role $i", 'status' => 'accepted', 'created_at' => $now, 'accepted_at' => $now]);
+            }
+        };
+
+        $join(100, 101);
+        $one = array_map($count, [null, 4, 3]);
+        $join(101, 120);
+
+        $this->assertSame($one, array_map($count, [null, 4, 3]));
+        $this->assertCount(6, $this->builds(null));
+        $this->assertCount(22, $this->dossier(3)['buildChoices']);
+    }
 }

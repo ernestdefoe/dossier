@@ -472,6 +472,10 @@ export default class DossierPage extends UserPage {
                       ) : null}
                       {build.title}
                     </span>
+                    {build.role !== null && build.role !== undefined ? (
+                      // A build they're on the team of, not their own: their role there, if they have one.
+                      <span className="DossierBuild-role">{build.role ? t('builds.role', { role: build.role }) : t('builds.team')}</span>
+                    ) : null}
                     <span className="DossierProject-excerpt">
                       {[build.finishedAt ? t('builds.finished', { date: dayjs(build.finishedAt).format('MMM YYYY') }) : null, ...build.specs]
                         .filter(Boolean)
